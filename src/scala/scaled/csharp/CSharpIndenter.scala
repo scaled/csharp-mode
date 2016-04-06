@@ -11,17 +11,11 @@ class CSharpIndenter (cfg :Config) extends Indenter.ByBlock(cfg) {
   import Indenter._
 
   override def computeIndent (state :State, base :Int, info :Info) = {
+    // pop case statements out one indentation level
+    if (info.startsWith(caseColonM)) base - indentWidth
     // bump extends/with in two indentation levels
-    if (info.startsWith(extendsOrWithM)) base + 2*indentWidth
-    // if we're in a faux case block...
-    else if (state.isInstanceOf[CaseS]) {
-      // ignore the block indent for subsequent case statements
-      if (info.startsWith(caseArrowM)) base - indentWidth
-      // ignore the block indent for the final close bracket
-      else if (info.firstChar == '}') base - 2*indentWidth
-      // otherwise stick to business as usual...
-      else super.computeIndent(state, base, info)
-    }
+    else if (info.startsWith(extendsOrWithM)) base + 2*indentWidth
+    // otherwise standard business
     else super.computeIndent(state, base, info)
   }
 
@@ -54,27 +48,12 @@ class CSharpIndenter (cfg :Config) extends Indenter.ByBlock(cfg) {
         slbExpectsPair = nstate.expectsPair(line)
         nstate
       }
-      // if this line opens a block or doc comment, push a state for it
-      else if (countComments(line, first) > 0) {
-        // if this is a doc comment which is followed by non-whitespace, then indent to match the
-        // second star rather than the first
-        val col = if (line.matches(firstLineDocM, first)) 2 else 1
-        new CommentS(col, start)
-      }
-      // if this line opens a match case which does not contain any code after the arrow, create a
-      // faux block to indent the case body
-      else if (line.matches(caseArrowM, first) && line.charAt(last) == '>') {
-        // if we're currently in the case block for the preceding case, pop it first
-        new CaseS(start.popIf(_.isInstanceOf[CaseS]))
-      }
       // otherwise leave the start as is
       else start
     }
 
     override def adjustEnd (line :LineV, first :Int, last :Int, start :State, cur :State) :State = {
       var end = cur
-      // if this line closes a doc/block comment, pop our comment state from the stack
-      if (countComments(line, 0) < 0) end = end.popIf(_.isInstanceOf[CommentS])
 
       // if the last non-ws-non-comment char is beyond our SLB condition expression then pop the
       // SLB state because the "body" was on the same line (this is normally done when we see any
@@ -146,15 +125,8 @@ class CSharpIndenter (cfg :Config) extends Indenter.ByBlock(cfg) {
     protected def contChars = ".+-="
   }
 
-  protected class CommentS (inset :Int, next :State) extends State(next) {
-    override def indent (config :Config, top :Boolean) = inset + next.indent(config)
-    override def show = s"CommentS($inset)"
-  }
   protected class ContinuedS (next :State) extends State(next) {
     override def show = "ContinuedS"
-  }
-  protected class CaseS (next :State) extends State(next) {
-    override def show = "CaseS"
   }
   protected class SingleBlockS (token :String, col :Int, next :State) extends State(next) {
     def expectsPair (line :LineV) = token match {
@@ -174,7 +146,7 @@ class CSharpIndenter (cfg :Config) extends Indenter.ByBlock(cfg) {
     override def show = s"SingleBlockS($token, $col)"
   }
 
-  private val caseArrowM = Matcher.regexp("""case\s.*=>""")
+  private val caseColonM = Matcher.regexp("(case\\s|default).*:")
   private val lambdaArrowM = Matcher.exact(" =>")
   private val extendsOrWithM = Matcher.regexp("""(extends|with)\b""")
   private val singleLineBlockM = Matcher.regexp("""(if|else if|else|while)\b""")
