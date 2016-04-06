@@ -24,7 +24,7 @@ object CSharpConfig extends Config.Defs {
 
     effacer("entity.name.package", moduleStyle),
     effacer("entity.name.type", typeStyle),
-    effacer("entity.name.tag", keywordStyle),
+    effacer("entity.name.tag", constantStyle),
     effacer("entity.other.inherited-class", typeStyle),
     effacer("entity.name.function", functionStyle),
     effacer("entity.name.val-declaration", variableStyle),
