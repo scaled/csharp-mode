@@ -133,11 +133,12 @@ repository:
     include: #code
   multi:
    name: meta.method.source.cs
-   begin: (?!new)(?=[\w<].*\s+)(?=[^=]+\()
+   begin: (?<!=|=\s)(?!new)(?=[\w<].*\s+)(?=[^=]+\()
    end: (})|(?=;)
    ecaps: 1=punctuation.section.method.end.source.cs
    patterns:
     include: #storage-modifiers
+    include: #builtinTypes
     multi:
      name: meta.method.identifier.source.cs
      begin: ([\w.]+)\s*\(
@@ -145,6 +146,7 @@ repository:
      end: \)
      patterns:
       include: #parameters
+      include: #constants
     multi:
      name: meta.method.return-type.source.cs
      begin: (?=\w.*\s+[\w.]+\s*\()
@@ -177,7 +179,6 @@ repository:
      begin: ([\w.]+)\s*(?=\{)
      bcaps: 1=entity.name.function.source.cs
      end: (?=\{)
-     ecaps: 1=entity.name.function.source.cs
     multi:
      name: meta.method.return-type.source.cs
      begin: (?=\w.*\s+[\w.]+\s*\{)
