@@ -61,7 +61,7 @@ repository:
    bcaps: 0=punctuation.definition.comment.source.cs
    end: $\n?
    patterns:
-    include: text.xml
+    include: source.xml
   multi:
    name: comment.block.source.cs
    begin: /\*
