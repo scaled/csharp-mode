@@ -8,6 +8,12 @@ import scaled._
 import scaled.code.{Commenter, Indenter, BlockIndenter}
 import scaled.grammar.GrammarCodeMode
 
+object CSharpConfig extends Config.Defs {
+
+  @Var("If true, cases inside switch blocks are indented one step.")
+  val indentCase = key(false)
+}
+
 @Major(name="csharp",
        tags=Array("code", "project", "csharp"),
        pats=Array(".*\\.cs"),
@@ -15,6 +21,7 @@ import scaled.grammar.GrammarCodeMode
 class CSharpMode (env :Env) extends GrammarCodeMode(env) {
 
   override def langScope = "source.cs"
+  override def configDefs = CSharpConfig :: super.configDefs
 
   override protected def createIndenter = new CSharpIndenter(config)
 
@@ -33,10 +40,12 @@ class CSharpIndenter (config :Config) extends BlockIndenter(config, Std.seq(
   BlockIndenter.adjustIndentWhenMatchStart(Matcher.regexp("(extends|implements)\\b"), 2),
   // bump `where` in two indentation levels
   BlockIndenter.adjustIndentWhenMatchStart(Matcher.regexp("(where)\\b"), 1),
-  // align changed method calls under their dot
+  // align chained method calls under their dot
   new BlockIndenter.AlignUnderDotRule(),
   // handle indenting switch statements properly
-  new BlockIndenter.SwitchRule(),
+  new BlockIndenter.SwitchRule() {
+    override def indentCaseBlocks = config(CSharpConfig.indentCase)
+  },
   // handle continued statements, with some special sauce for : after case
   new BlockIndenter.CLikeContStmtRule()
 )) {
