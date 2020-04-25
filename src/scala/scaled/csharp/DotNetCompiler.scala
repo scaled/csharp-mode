@@ -14,7 +14,7 @@ object DotNetCompiler {
   val outputM = Matcher.regexp("""^([^(]+)\((\d+),(\d+)\): (warning|error)([^:]*): (.*)\[(.*)\]$""")
 }
 
-class DotNetCompiler (proj :Project) extends Compiler(proj) {
+class DotNetCompiler (proj :Project, sln :Path) extends Compiler(proj) {
   import Compiler._
   import DotNetCompiler._
 
@@ -37,7 +37,7 @@ class DotNetCompiler (proj :Project) extends Compiler(proj) {
     willCompile()
 
     val result = Promise[Boolean]()
-    val cmd = Seq("dotnet", "build") ++ buildOpts
+    val cmd = Seq("dotnet", "build", sln.getFileName.toString) ++ buildOpts
     SubProcess(SubProcess.Config(cmd.toArray, cwd=proj.root.path),
                proj.metaSvc.exec, buffer, result.succeed)
     result

@@ -25,9 +25,7 @@ object CSharpPlugins {
 
     def addComponents (project :Project) :Unit = {
       val rootPath = project.root.path
-      println(s"Looking for .sln in $rootPath")
       findSln(rootPath).foreach { sln =>
-        println(s"Processing $sln in $rootPath")
         val projName = rootPath.getFileName.toString // TOOD: read from sln?
 
         val sb = Ignorer.stockIgnores
@@ -52,7 +50,7 @@ object CSharpPlugins {
         project.addComponent(classOf[Filer], new DirectoryFiler(project, sb))
 
         // add a compiler that runs 'dotnet build' and parses the output
-        project.addComponent(classOf[Compiler], new DotNetCompiler(project))
+        project.addComponent(classOf[Compiler], new DotNetCompiler(project, sln))
 
         // // TODO: bower doesn't define source directories, so we hack some stuff
         // val sourceDirs = Seq("src", "test").map(rootPath.resolve(_))
