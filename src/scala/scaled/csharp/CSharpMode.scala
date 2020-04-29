@@ -32,6 +32,32 @@ class CSharpMode (env :Env) extends GrammarCodeMode(env) {
     override def blockClose  = "*/"
     override def docOpen     = "///"
     override def docPrefix   = "///"
+
+    /** Used to identify paragraphs in C# doc comments. Does some special handling to handle XML
+      * `<tag>`s. */
+    class XmlDocCommentParagrapher (syn :Syntax, buf :Buffer) extends CommentParagrapher(syn, buf) {
+      // TODO: if xmlTagRegexp matches just <c> we should not treat that as a <tag> line
+      private val xmlTagM = Matcher.regexp("</?[a-z]+>")
+      /** Returns true if we're on a `<tag>` line (or its moral equivalent). */
+      def isXmlTagLine (line :LineV) = line.matches(xmlTagM, commentStart(line))
+
+      private val openSummaryM = Matcher.exact("<summary>")
+      def isBareOpenSummaryLine (line :LineV) = {
+        val cs = commentStart(line)
+        line.matches(openSummaryM, cs) && line.length == cs + openSummaryM.matchLength
+      }
+
+      override def canPrepend (row :Int) =
+        // don't extend paragraph upwards if the current top is a <tag> line
+        super.canPrepend(row) && !isXmlTagLine(line(row+1)) &&
+        // nor if the to-be-prepended line is just <summary> all by itself
+        !isBareOpenSummaryLine(line(row))
+
+      // don't extend paragraph downwards if the new line is a <tag> line
+      override def canAppend (row :Int) = super.canAppend(row) && !isXmlTagLine(line(row))
+    }
+
+    override def mkParagrapher (syn :Syntax, buf :Buffer) = new XmlDocCommentParagrapher(syn, buf)
   }
 }
 
