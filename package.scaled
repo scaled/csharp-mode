@@ -6,3 +6,4 @@ descrip: Provides language support for C#.
 license: New BSD
  depend: git:https://github.com/scaled/java-mode.git
  depend: git:https://github.com/scaled/xml-mode.git
+ module: test
