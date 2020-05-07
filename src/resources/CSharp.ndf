@@ -54,6 +54,11 @@ repository:
   include: #preprocessor
   include: #method-call
   include: #builtinTypes
+ expr:
+  include: #comments
+  include: #constants
+  include: #keywords
+  include: #method-call
  comments:
   multi:
    name: comment.block.documentation.source.cs
@@ -160,6 +165,12 @@ repository:
      end: \)
      patterns:
       include: #builtinTypes
+    multi:
+     name: meta.method.lambda.body.source.cs
+     begin: =>
+     end: (?=;)
+     patterns:
+      include: #expr
     multi:
      name: meta.method.body.source.cs
      begin: \{
