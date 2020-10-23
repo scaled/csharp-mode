@@ -138,7 +138,7 @@ repository:
     include: #code
   multi:
    name: meta.method.source.cs
-   begin: (?<!=|=\s)(?!new)(?=[\w<].*\s+)(?=[^=]+\()
+   begin: (?<!=|=\s)(?!new)(?=[\w<].*\s+)(?=[^=]+(\(|=>))
    end: (})|(?=;)
    ecaps: 1=punctuation.section.method.end.source.cs
    patterns:
@@ -146,16 +146,20 @@ repository:
     include: #builtinTypes
     multi:
      name: meta.method.identifier.source.cs
-     begin: ([\w.]+)\s*\(
+     begin: ([\w.]+)\s+\(
      bcaps: 1=entity.name.function.source.cs
      end: \)
      patterns:
       include: #parameters
       include: #constants
+    single:
+     name: meta.method.lamba.identifier.source.cs
+     pattern: ([\w.]+)\s+(?==>)
+     bcaps: 1=entity.name.function.source.cs
     multi:
      name: meta.method.return-type.source.cs
-     begin: (?=\w.*\s+[\w.]+\s*\()
-     end: (?=[\w.]+\s*\()
+     begin: (?=\w.*\s+[\w.]+\s*(\(|=>))
+     end: (?=[\w.]+\s*(\(|=>))
      patterns:
       include: #builtinTypes
     multi:
@@ -236,7 +240,7 @@ repository:
   single:
    name: meta.preprocessor.source.cs
    pattern: ^\s*#\s*(if|else|elif|endif|define|undef|warning|error|line|pragma|region|endregion)\b
-   caps: 2=keyword.control.import.source.cs
+   caps: 1=keyword.control.import.source.cs
  storage-modifiers:
   single:
    name: storage.modifier.source.cs
