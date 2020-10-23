@@ -61,6 +61,32 @@ class CSharpMode (env :Env) extends GrammarCodeMode(env) {
   }
 }
 
+object CSharpRules {
+  import BlockIndenter._
+  type State = Indenter.State // cope with scale.State BlockIndenter.State name clash
+
+  class SingleBlockS (next :State) extends State(next) {
+    override def indent (config :Config, top :Boolean) = indentWidth(config) + next.indent(config)
+    override def show = s"SingleBlockS"
+  }
+
+  class LambdaPropertyRule extends Rule {
+    override def adjustEnd (line :LineV, first :Int, last :Int, start :State, cur :State) :State = {
+      var end = cur
+      // if we ended a line with a SingleBlockS on the top of the stack, it's time to pop it
+      if (end.isInstanceOf[SingleBlockS]) end = end.next
+      // otherwise if the line ends with => then start a new single-line block (note: the check
+      // that we're currently nested inside a block is perhaps not needed)
+      else if (end.isInstanceOf[BlockS]) {
+        val arrowStart = last+1-lambdaArrowM.show.length
+        if (arrowStart >= 0 && line.matches(lambdaArrowM, arrowStart)) end = new SingleBlockS(end)
+      }
+      end
+    }
+    private val lambdaArrowM = Matcher.exact(" =>")
+  }
+}
+
 class CSharpIndenter (config :Config) extends BlockIndenter(config, Std.seq(
   // bump `extends`/`implements` in two indentation levels
   BlockIndenter.adjustIndentWhenMatchStart(Matcher.regexp("(extends|implements)\\b"), 2),
@@ -73,7 +99,9 @@ class CSharpIndenter (config :Config) extends BlockIndenter(config, Std.seq(
     override def indentCaseBlocks = config(CSharpConfig.indentCase)
   },
   // handle continued statements, with some special sauce for : after case
-  new BlockIndenter.CLikeContStmtRule()
+  new BlockIndenter.CLikeContStmtRule(),
+  // handle properties defined with lambda arrows
+  new CSharpRules.LambdaPropertyRule()
 )) {
   import Indenter._
   import BlockIndenter._
