@@ -45,6 +45,6 @@ class CSharpGrammarPlugin extends GrammarPlugin {
     syntaxer("comment.line", Syntax.LineComment),
     syntaxer("comment.block", Syntax.DocComment),
     syntaxer("constant", Syntax.OtherLiteral),
-    syntaxer("string.quoted.double", Syntax.StringLiteral)
+    syntaxer("string.quoted", Syntax.StringLiteral)
   )
 }
